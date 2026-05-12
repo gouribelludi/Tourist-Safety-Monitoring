@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emergency Route Finder - Tourist Safety</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 15px 20px;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            z-index: 1001;
+            position: relative;
+        }
+
+        .header h1 {
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .back-btn {
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        #map {
+            position: absolute;
+            top: 180px;
+            bottom: 0;
+            left: 0;
+            right: 0;
+        }
+
+        .controls {
+            position: absolute;
+            top: 60px;
+            left: 10px;
+            right: 10px;
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+        }
+
+        .form-row {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 6px;
+        }
+
+        input[type="text"], input[type="number"] {
+            width: 100%;
+            padding: 10px 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        input[type="text"]:focus, input[type="number"]:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        #go {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+        }
+
+        #go:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+        }
+
+        #clear {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+            color: white;
+        }
+
+        #clear:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+        }
+
+        #getCurrentLoc {
+            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+            color: white;
+        }
+
+        #getCurrentLoc:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+        }
+
+        .buffer-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 13px;
+            color: #555;
+        }
+
+        .buffer-control input[type="number"] {
+            width: 100px;
+        }
+
+        #status {
+            margin-top: 12px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            font-size: 13px;
+            color: #333;
+            border-left: 4px solid #667eea;
+        }
+
+        @media (max-width: 768px) {
+            .controls {
+                padding: 15px;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+
+            .header h1 {
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🚨 Emergency Route Finder</h1>
+        <a href="dashboard.html" class="back-btn">← Dashboard</a>
+    </div>
+
+    <div class="controls">
+        <div id="userPanel" style="display:none; margin-bottom:12px; padding:10px; background:#f0f4ff; border-left:4px solid #667eea; border-radius:8px; font-size:13px;">
+            <strong>Traveler:</strong> <span id="uName"></span><br>
+            <strong>Phone:</strong> <span id="uPhone"></span><br>
+            <strong>Destination:</strong> <span id="uDest"></span>
+        </div>
+        <div class="form-row">
+            <button id="getCurrentLoc">📍 Use My Current Location as Origin</button>
+        </div>
+
+        <div class="form-row">
+            <label>Origin (leave empty for auto-location, or enter address/coordinates)</label>
+            <input id="origin" type="text" placeholder="Auto-detected or enter manually" />
+        </div>
+
+        <div class="form-row">
+            <label>Destination (address or lat,lng) *</label>
+            <input id="destination" type="text" placeholder="e.g., Times Square or 40.758,-73.9855" required />
+        </div>
+
+        <div class="buffer-control">
+            <label>Search radius (meters):</label>
+            <input id="buffer" type="number" value="500" min="50" max="5000" />
+        </div>
+
+        <div class="button-group">
+            <button id="go">🔍 Show Safe Route & Services</button>
+            <button id="clear">🗑️ Clear</button>
+        </div>
+
+        <div id="status">Ready! Click "Use My Current Location" or enter origin manually, then set destination.</div>
+    </div>
+
+    <div id="map"></div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+    <script src="https://unpkg.com/@turf/turf@6.5.0/turf.min.js"></script>
+    <script>
+        // Check login
+        if (!localStorage.getItem('isLoggedIn')) {
+            window.location.href = 'index.html';
+        }
+
+        const qs = sel => document.querySelector(sel);
+        const status = txt => qs('#status').textContent = txt;
+
+        const map = L.map('map').setView([20, 0], 2);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        let routeLayer = null;
+        const clusterGroup = L.markerClusterGroup();
+        map.addLayer(clusterGroup);
+
+        const policeIcon = L.icon({
+            iconUrl: 'https://images.rawpixel.com/image_png_800/cHJpdmF0ZS9zdGF0aWMvZmlsZXMvd2Vic2l0ZS8yMDIyLTA1L3drOTc1ODE4My1pbWFnZS0wMS1qb2I4NTAucG5n.png',
+            iconSize: [28, 28],
+            iconAnchor: [14, 28]
+        });
+
+        const hospitalIcon = L.icon({
+            iconUrl: 'https://5.imimg.com/data5/YQ/BD/UL/SELLER-6629898/hospital-sign.jpg',
+            iconSize: [28, 28],
+            iconAnchor: [14, 28]
+        });
+
+        // Attempt to load last tracked position; fallback to browser geolocation button
+        window.addEventListener('load', async function() {
+            try {
+                const res = await fetch('/api/track/me');
+                const data = await res.json();
+                if (data.active && data.latestPosition) {
+                    const { latitude, longitude } = data.latestPosition;
+                    qs('#origin').value = `${latitude.toFixed(6)},${longitude.toFixed(6)}`;
+                    status(`✅ Using your last tracked position as origin.`);
+                    map.setView([latitude, longitude], 13);
+                    L.marker([latitude, longitude]).addTo(map).bindPopup('📍 Last tracked position').openPopup();
+                    if (data.user) {
+                        document.getElementById('userPanel').style.display='block';
+                        document.getElementById('uName').textContent = data.user.name || 'N/A';
+                        document.getElementById('uPhone').textContent = data.user.phone || 'N/A';
+                        document.getElementById('uDest').textContent = data.user.destination || 'N/A';
+                    }
+                    return; // Skip auto geolocation button
+                }
+            } catch (e) {
+                console.warn('Could not prefill origin from tracking', e);
+            }
+            // Fallback: auto click to get current location
+            setTimeout(() => { document.getElementById('getCurrentLoc').click(); }, 600);
+        });
+
+        document.getElementById('getCurrentLoc').addEventListener('click', function() {
+            if (!navigator.geolocation) {
+                status('Geolocation not supported by your browser');
+                return;
+            }
+
+            status('Getting your current location...');
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const lat = position.coords.latitude.toFixed(6);
+                    const lng = position.coords.longitude.toFixed(6);
+                    qs('#origin').value = `${lat},${lng}`;
+                    status(`✅ Current location detected: ${lat}, ${lng}`);
+                    
+                    // Center map on current location
+                    map.setView([lat, lng], 13);
+                    L.marker([lat, lng]).addTo(map).bindPopup('📍 You are here').openPopup();
+                },
+                (error) => {
+                    status('Error: ' + error.message);
+                }
+            );
+        });
+
+        async function parseLocation(text) {
+            text = (text || '').trim();
+            if (!text) return null;
+            const latlngMatch = text.match(/^\s*([+-]?\d+(\.\d+)?)\s*,\s*([+-]?\d+(\.\d+)?)\s*$/);
+            if (latlngMatch) {
+                return [parseFloat(latlngMatch[1]), parseFloat(latlngMatch[3])];
+            }
+            const url = 'https://nominatim.openstreetmap.org/search?format=json&limit=1&q=' + encodeURIComponent(text);
+            const res = await fetch(url, { headers: { 'Accept-Language': 'en' } });
+            if (!res.ok) throw new Error('Geocoding error: ' + res.status);
+            const list = await res.json();
+            if (!list || list.length === 0) throw new Error('Address not found: ' + text);
+            return [parseFloat(list[0].lat), parseFloat(list[0].lon)];
+        }
+
+        async function geolocateBrowser() {
+            return new Promise((resolve, reject) => {
+                if (!navigator.geolocation) return reject('Geolocation not supported');
+                navigator.geolocation.getCurrentPosition(pos => {
+                    resolve([pos.coords.latitude, pos.coords.longitude]);
+                }, err => reject(err.message || 'Geolocation failed'));
+            });
+        }
+
+        async function getRoute(origin, dest) {
+            const url = `https://router.project-osrm.org/route/v1/driving/${origin[1]},${origin[0]};${dest[1]},${dest[0]}?overview=full&geometries=geojson&annotations=duration,distance`;
+            const r = await fetch(url);
+            if (!r.ok) throw new Error('OSRM routing error: ' + r.status);
+            const j = await r.json();
+            if (!j.routes || j.routes.length === 0) throw new Error('No route found');
+            return j.routes[0].geometry;
+        }
+
+        async function queryOverpass(bbox) {
+            const [s, w, n, e] = bbox;
+            const query = `
+[out:json][timeout:25];
+(
+  node["amenity"~"hospital|police"](${s},${w},${n},${e});
+  way["amenity"~"hospital|police"](${s},${w},${n},${e});
+  relation["amenity"~"hospital|police"](${s},${w},${n},${e});
+);
+out center;`;
+            const res = await fetch('https://overpass-api.de/api/interpreter', {
+                method: 'POST',
+                body: query,
+                headers: { 'Content-Type': 'text/plain' }
+            });
+            if (!res.ok) throw new Error('Overpass error: ' + res.status);
+            return res.json();
+        }
+
+        function elementsToPoints(elements) {
+            const pts = [];
+            for (const el of elements) {
+                let lat, lon;
+                if (el.type === 'node') {
+                    lat = el.lat; lon = el.lon;
+                } else if (el.type === 'way' || el.type === 'relation') {
+                    if (el.center) { lat = el.center.lat; lon = el.center.lon; }
+                    else continue;
+                } else continue;
+                pts.push({ id: el.id, type: el.type, lat, lon, tags: el.tags || {} });
+            }
+            return pts;
+        }
+
+        function filterPointsNearRoute(points, routeGeoJSON, bufferMeters) {
+            const line = routeGeoJSON;
+            const result = [];
+            for (const p of points) {
+                const pt = turf.point([p.lon, p.lat]);
+                const distKm = turf.pointToLineDistance(pt, line, { units: 'kilometers' });
+                const distMeters = distKm * 1000;
+                if (distMeters <= bufferMeters) {
+                    p.distanceToRoute = Math.round(distMeters);
+                    result.push(p);
+                }
+            }
+            return result;
+        }
+
+        async function showRouteAndAmenities() {
+            status('Working...');
+            clusterGroup.clearLayers();
+            if (routeLayer) { map.removeLayer(routeLayer); routeLayer = null; }
+
+            let originInput = qs('#origin').value.trim();
+            let destInput = qs('#destination').value.trim();
+            let bufferMeters = Math.max(50, parseInt(qs('#buffer').value || '500', 10));
+
+            let originCoords = null;
+            let destCoords = null;
+
+            try {
+                if (!originInput) {
+                    status('Using browser location...');
+                    originCoords = await geolocateBrowser();
+                } else {
+                    originCoords = await parseLocation(originInput);
+                }
+                destCoords = await parseLocation(destInput);
+            } catch (err) {
+                status('Error parsing locations: ' + (err.message || err));
+                return;
+            }
+
+            status('Fetching route from OSRM...');
+            let routeGeoJSON;
+            try {
+                routeGeoJSON = await getRoute(originCoords, destCoords);
+            } catch (err) {
+                status('Routing error: ' + (err.message || err));
+                return;
+            }
+
+            routeLayer = L.geoJSON(routeGeoJSON, {
+                style: { color: '#007bff', weight: 5, opacity: 0.85 }
+            }).addTo(map);
+
+            const routeBounds = routeLayer.getBounds();
+            routeBounds.extend([originCoords[0], originCoords[1]]);
+            routeBounds.extend([destCoords[0], destCoords[1]]);
+            map.fitBounds(routeBounds, { padding: [50, 50] });
+
+            const bboxArr = turf.bbox(routeGeoJSON);
+            let south = bboxArr[1], west = bboxArr[0], north = bboxArr[3], east = bboxArr[2];
+
+            const expandDegLat = (bufferMeters + 200) / 111000;
+            const midLat = (south + north) / 2;
+            const expandDegLon = (bufferMeters + 200) / (111000 * Math.cos(midLat * Math.PI / 180));
+            south -= expandDegLat;
+            north += expandDegLat;
+            west -= expandDegLon;
+            east += expandDegLon;
+
+            status('Querying OSM for police & hospitals...');
+            let overpassData;
+            try {
+                overpassData = await queryOverpass([south, west, north, east]);
+            } catch (err) {
+                status('Overpass error: ' + (err.message || err));
+                return;
+            }
+
+            const points = elementsToPoints(overpassData.elements || []);
+            status(`Found ${points.length} raw OSM items in bbox — filtering by ${bufferMeters} m to route...`);
+            const nearby = filterPointsNearRoute(points, routeGeoJSON, bufferMeters);
+            status(`✅ Showing ${nearby.length} police/hospital items within ${bufferMeters} m of route.`);
+
+            const origMarker = L.marker([originCoords[0], originCoords[1]]).bindPopup('🚩 Origin').addTo(map);
+            const destMarker = L.marker([destCoords[0], destCoords[1]]).bindPopup('🎯 Destination').addTo(map);
+            clusterGroup.addLayer(origMarker);
+            clusterGroup.addLayer(destMarker);
+
+            for (const p of nearby) {
+                const latlng = [p.lat, p.lon];
+                const tagAmenity = (p.tags.amenity || '').toLowerCase();
+                const name = p.tags.name || (tagAmenity === 'police' ? 'Police' : 'Hospital/Clinic');
+                const popupHtml = `<b>${name}</b><br/>Type: ${tagAmenity || 'unknown'}<br/>Distance to route: ${p.distanceToRoute} m`;
+                const marker = L.marker(latlng, { icon: tagAmenity === 'police' ? policeIcon : hospitalIcon }).bindPopup(popupHtml);
+                clusterGroup.addLayer(marker);
+            }
+
+            status(`✅ Done — ${nearby.length} items placed. Zoom & click markers for details.`);
+        }
+
+        qs('#go').addEventListener('click', () => {
+            showRouteAndAmenities().catch(e => {
+                status('Unexpected error: ' + (e.message || e));
+                console.error(e);
+            });
+        });
+
+        qs('#clear').addEventListener('click', () => {
+            clusterGroup.clearLayers();
+            if (routeLayer) { map.removeLayer(routeLayer); routeLayer = null; }
+            qs('#origin').value = ''; qs('#destination').value = '';
+            status('Cleared. Ready for new search.');
+        });
+
+        map.on('dblclick', e => {
+            const lat = e.latlng.lat.toFixed(6), lon = e.latlng.lng.toFixed(6);
+            qs('#destination').value = `${lat},${lon}`;
+            status(`Destination set to ${lat},${lon}`);
+        });
+    </script>
+</body>
+</html>

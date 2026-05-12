@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tourist Safety - Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .dashboard-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 20px 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            color: #667eea;
+            font-size: 28px;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .user-icon {
+            width: 45px;
+            height: 45px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .logout-btn {
+            padding: 10px 20px;
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .logout-btn:hover {
+            background: #c82333;
+            transform: translateY(-2px);
+        }
+
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-top: 20px;
+        }
+
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+
+        .card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .card-icon {
+            font-size: 50px;
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        .card h2 {
+            color: #333;
+            font-size: 22px;
+            margin-bottom: 10px;
+        }
+
+        .card p {
+            color: #666;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .card-gps {
+            border-top: 4px solid #28a745;
+        }
+
+        .card-emergency {
+            border-top: 4px solid #dc3545;
+        }
+
+        .card-police {
+            border-top: 4px solid #007bff;
+        }
+
+        .card-admin {
+            border-top: 4px solid #ffc107;
+        }
+        .card-safety {
+            border-top: 4px solid #8a2be2;
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .cards-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .welcome-message {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 18px;
+            color: #333;
+        }
+
+        /* Destination Info Widget */
+        .dest-card {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-top: 20px;
+        }
+        .dest-form { display: grid; grid-template-columns: 1fr auto; gap: 10px; margin-bottom: 15px; }
+        .dest-form input { padding: 12px 14px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px; }
+        .dest-form button { padding: 12px 16px; background: linear-gradient(135deg,#007bff,#5a67d8); color:#fff; border:none; border-radius:8px; cursor:pointer; font-weight:600; }
+        .dest-results { display: grid; grid-template-columns: 1fr; gap: 14px; }
+        .wiki-box { display: grid; grid-template-columns: 120px 1fr; gap: 12px; background:#f8f9fa; border-left:4px solid #667eea; padding:12px; border-radius:10px; }
+        .wiki-thumb { width:120px; height:120px; object-fit:cover; border-radius:8px; background:#ddd; }
+        .videos { display:grid; grid-template-columns: repeat(auto-fit, minmax(260px,1fr)); gap:12px; }
+        .videos iframe { width:100%; aspect-ratio:16/9; border:0; border-radius:10px; }
+        .muted { color:#666; font-size:13px; }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <div class="header">
+            <h1>🛡️ Tourist Safety Dashboard</h1>
+            <div class="user-info">
+                <div class="user-icon">👤</div>
+                <span id="username">User</span>
+                <button class="logout-btn" onclick="logout()">Logout</button>
+            </div>
+        </div>
+
+        <div class="welcome-message">
+            <strong>Welcome!</strong> Choose a service below to get started with your safety features.
+        </div>
+
+        <div class="cards-grid">
+            <a href="gps-tracker.html" class="card card-gps">
+                <span class="card-icon">📍</span>
+                <h2>GPS Tracker</h2>
+                <p>Track your real-time location and share it with emergency contacts. Start monitoring your journey for added safety.</p>
+            </a>
+
+            <a href="emergency-map.html" class="card card-emergency">
+                <span class="card-icon">🚨</span>
+                <h2>Emergency Route Finder</h2>
+                <p>Find the safest route to your destination with nearby emergency services along the way. Auto-detects your current location.</p>
+            </a>
+
+            <a href="police-medical.html" class="card card-police">
+                <span class="card-icon">🏥</span>
+                <h2>Police & Medical Finder</h2>
+                <p>Locate nearby police stations and hospitals instantly using your live location. Get directions and contact information.</p>
+            </a>
+
+            <a href="admin-map.html" class="card card-admin">
+                <span class="card-icon">🗺️</span>
+                <h2>Live Tracking Map</h2>
+                <p>View all active GPS trackers on a live map. Monitor multiple users in real-time for administrative purposes.</p>
+            </a>
+
+            <a href="/tourist-safety/" class="card card-safety">
+                <span class="card-icon">🛟</span>
+                <h2>Tourist Safety Suite</h2>
+                <p>Manage emergency contacts, send SOS alerts, and auto-send GPS danger emails. Opens the Tourist Safety module.</p>
+            </a>
+        </div>
+
+        <div class="dest-card" id="destCard">
+            <h2 style="margin-bottom:12px; color:#333;">🧭 Destination Info & Videos</h2>
+            <div class="dest-form">
+                <input id="destInput" placeholder="Enter destination city/place (e.g., Mumbai or 19.07,72.88)">
+                <button id="destBtn">Show Info</button>
+            </div>
+            <div class="muted" id="destHint">Tip: We will fetch a brief description from Wikipedia and top related videos.</div>
+            <div class="dest-results" id="destResults" style="display:none;">
+                <div class="wiki-box" id="wikiBox" style="display:none;">
+                    <img id="wikiThumb" class="wiki-thumb" alt="thumbnail"/>
+                    <div>
+                        <div style="font-weight:700; margin-bottom:6px;" id="wikiTitle"></div>
+                        <div style="font-size:14px; color:#333;" id="wikiExtract"></div>
+                        <div style="margin-top:8px;">
+                            <a id="wikiLink" href="#" target="_blank">Read full article ↗</a>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <h3 style="margin:2px 0 8px; color:#333;">▶️ Related Videos</h3>
+                    <div id="videoGrid" class="videos"></div>
+                    <div class="muted" id="videoNote" style="display:none;">Couldn’t load embeds. <a id="ytLink" target="_blank">Open YouTube search</a></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Check if user is logged in
+        if (!localStorage.getItem('isLoggedIn')) {
+            window.location.href = 'index.html';
+        }
+
+        // Display username
+        const username = localStorage.getItem('username') || 'User';
+        document.getElementById('username').textContent = username;
+
+        function logout() {
+            localStorage.removeItem('isLoggedIn');
+            localStorage.removeItem('username');
+            window.location.href = 'index.html';
+        }
+
+        // Prefill destination from active tracking if present
+        (async () => {
+            try {
+                const r = await fetch('/api/track/me');
+                const j = await r.json();
+                if (j.active && j.user && j.user.destination) {
+                    document.getElementById('destInput').value = j.user.destination;
+                }
+            } catch {}
+        })();
+
+        // Destination Info + Videos
+        document.getElementById('destBtn').addEventListener('click', (e) => {
+            e.preventDefault();
+            loadDestinationInfo();
+        });
+
+        async function loadDestinationInfo() {
+            const q = document.getElementById('destInput').value.trim();
+            const results = document.getElementById('destResults');
+            const wikiBox = document.getElementById('wikiBox');
+            const videoGrid = document.getElementById('videoGrid');
+            const videoNote = document.getElementById('videoNote');
+            const ytLink = document.getElementById('ytLink');
+            if (!q) return;
+            results.style.display = 'block';
+            wikiBox.style.display = 'none';
+            videoGrid.innerHTML = '';
+            videoNote.style.display = 'none';
+            ytLink.href = `https://www.youtube.com/results?search_query=${encodeURIComponent(q + ' travel tourism')}`;
+
+            // 1) Wikipedia summary
+            try {
+                const title = q.replace(/\s+/g, '_');
+                let w = await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title)}`);
+                if (!w.ok) throw new Error('Direct summary failed');
+                const ws = await w.json();
+                renderWiki(ws);
+            } catch {
+                // fallback: geocode to nearby page
+                try {
+                    const g = await geocode(q);
+                    const geo = await fetch(`https://en.wikipedia.org/w/api.php?action=query&list=geosearch&gscoord=${g.lat}|${g.lon}&gsradius=10000&gslimit=1&format=json&origin=*`);
+                    const gj = await geo.json();
+                    const item = gj?.query?.geosearch?.[0];
+                    if (item) {
+                        const w2 = await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(item.title)}`);
+                        if (w2.ok) renderWiki(await w2.json());
+                    }
+                } catch {}
+            }
+
+            // 2) Videos via Piped (no API key) with resilient fallbacks
+            try {
+                const endpoints = [
+                    'https://pipedapi.kavin.rocks',
+                    'https://piped.video',
+                    'https://piped.lunar.icu'
+                ];
+                let results = [];
+                for (const ep of endpoints) {
+                    try {
+                        const r = await fetch(`${ep}/api/v1/search?q=${encodeURIComponent(q + ' places to visit travel')}&region=IN`);
+                        if (!r.ok) continue;
+                        const j = await r.json();
+                        results = Array.isArray(j) ? j : (j?.items || []);
+                        if (results.length) break;
+                    } catch {}
+                }
+
+                // Normalize to up to 3 video IDs
+                const ids = [];
+                for (const v of results) {
+                    if ((v.type || 'video') !== 'video') continue;
+                    let id = v.id || '';
+                    if (!id && v.url) {
+                        // /watch?v=ID or /shorts/ID
+                        const u = v.url;
+                        const vParam = u.includes('watch') ? (u.split('v=')[1] || '').split('&')[0] : '';
+                        const shortId = u.includes('/shorts/') ? u.split('/shorts/')[1]?.split('?')[0] : '';
+                        id = vParam || shortId;
+                    }
+                    if (id && !ids.includes(id)) ids.push(id);
+                    if (ids.length >= 3) break;
+                }
+
+                if (ids.length) {
+                    ids.forEach(id => {
+                        const iframe = document.createElement('iframe');
+                        iframe.src = `https://www.youtube-nocookie.com/embed/${id}`;
+                        iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
+                        iframe.loading = 'lazy';
+                        iframe.referrerPolicy = 'strict-origin-when-cross-origin';
+                        videoGrid.appendChild(iframe);
+                    });
+                } else {
+                    videoNote.style.display = 'block';
+                }
+            } catch (e) {
+                console.warn('Video fetch failed', e);
+                videoNote.style.display = 'block';
+            }
+        }
+
+        function renderWiki(ws) {
+            if (!ws || ws.type === 'https://mediawiki.org/wiki/HyperSwitch/errors/not_found') return;
+            document.getElementById('wikiTitle').textContent = ws.title || 'Destination';
+            document.getElementById('wikiExtract').textContent = ws.extract || 'No description available.';
+            const thumb = ws.thumbnail?.source || ws.originalimage?.source || '';
+            const img = document.getElementById('wikiThumb');
+            if (thumb) { img.src = thumb; img.style.display='block'; } else { img.style.display='none'; }
+            const link = ws.content_urls?.desktop?.page || `https://en.wikipedia.org/wiki/${encodeURIComponent(ws.title||'')}`;
+            document.getElementById('wikiLink').href = link;
+            document.getElementById('wikiBox').style.display = 'grid';
+        }
+
+        async function geocode(text) {
+            const m = text.match(/^\s*([+-]?\d+(?:\.\d+)?)\s*,\s*([+-]?\d+(?:\.\d+)?)\s*$/);
+            if (m) return { lat: parseFloat(m[1]), lon: parseFloat(m[2]) };
+            const r = await fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1&q=' + encodeURIComponent(text), { headers: { 'Accept-Language': 'en' } });
+            const j = await r.json();
+            if (!j.length) throw new Error('Geocode failed');
+            return { lat: parseFloat(j[0].lat), lon: parseFloat(j[0].lon) };
+        }
+    </script>
+</body>
+</html>

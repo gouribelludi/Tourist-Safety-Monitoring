@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Tourist Safety • Contacts</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="title">🛡️ Tourist Safety</div>
+            <div class="user"><a class="back-btn" href="/dashboard.html">← Back</a></div>
+        </div>
+
+        <div class="card stack">
+            <div>
+                <div style="font-weight:700; font-size:18px;">Emergency Contacts</div>
+                <div class="muted">Add up to 3 emails and phones for alerts.</div>
+            </div>
+
+            <div class="grid three">
+                <div class="row"><label>Email 1</label><input id="email1" type="email" placeholder="friend1@example.com"></div>
+                <div class="row"><label>Email 2</label><input id="email2" type="email" placeholder="friend2@example.com"></div>
+                <div class="row"><label>Email 3</label><input id="email3" type="email" placeholder="friend3@example.com"></div>
+            </div>
+
+            <div class="grid three">
+                <div class="row"><label>Phone 1</label><input id="phone1" type="tel" placeholder="+91 90000 00001"></div>
+                <div class="row"><label>Phone 2</label><input id="phone2" type="tel" placeholder="+91 90000 00002"></div>
+                <div class="row"><label>Phone 3</label><input id="phone3" type="tel" placeholder="+91 90000 00003"></div>
+            </div>
+
+            <div>
+                <button class="btn success" onclick="saveContacts()">Save Contacts</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+function saveContacts() {
+        const uid = localStorage.getItem("userId");
+        if (!uid) {
+            alert("Please login first");
+            location.href = 'index.html';
+            return;
+        }
+    fetch("http://localhost:5000/contacts/save", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+                userId: uid,
+            emails: [email1.value, email2.value, email3.value],
+            phones: [phone1.value, phone2.value, phone3.value]
+        })
+    })
+    .then(res => res.json())
+        .then(data => {
+                alert(data?.success ? "Contacts saved!" : "Failed to save");
+            if (data?.success) location.href = 'dashboard.html';
+        });
+}
+    </script>
+
+</body>
+</html>

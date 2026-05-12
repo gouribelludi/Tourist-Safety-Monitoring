@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Tourist Safety • Login</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="title">🛡️ Tourist Safety</div>
+            <div class="user"><a href="/dashboard.html" class="back-btn">← Back</a><span class="pill">Login</span></div>
+        </div>
+
+        <div class="card">
+            <div class="stack">
+                <div class="row">
+                    <label for="userId">User ID</label>
+                    <input id="userId" placeholder="Enter any ID to identify your session">
+                </div>
+                <div class="row">
+                    <label for="username">Your Name</label>
+                    <input id="username" placeholder="e.g., Alex">
+                </div>
+                <div class="row">
+                    <label for="email">Your Email</label>
+                    <input id="email" type="email" placeholder="name@example.com">
+                </div>
+                <div class="row">
+                    <button class="btn primary" onclick="login()">Continue</button>
+                    <div id="status" class="banner spaced">Checking backend...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+// Auto-run logic when page opens
+window.addEventListener('DOMContentLoaded', async () => {
+        // Prefill
+        userId.value = localStorage.getItem('userId') || '';
+        username.value = localStorage.getItem('username') || '';
+        email.value = localStorage.getItem('email') || '';
+
+        const statusBanner = document.getElementById('status');
+    try {
+        const r = await fetch('http://localhost:5000/');
+        if (r.ok) {
+                        statusBanner.textContent = 'Backend online ✔';
+                        statusBanner.className = 'banner ok spaced';
+        } else {
+            throw new Error('Status ' + r.status);
+        }
+    } catch (e) {
+                statusBanner.textContent = 'Backend unreachable ✖ (start server before login)';
+                statusBanner.className = 'banner err spaced';
+    }
+});
+
+function login() {
+    localStorage.setItem("userId", userId.value);
+    localStorage.setItem("username", username.value);
+    localStorage.setItem("email", email.value);
+
+    location.href = "dashboard.html";
+}
+    </script>
+</body>
+</html>

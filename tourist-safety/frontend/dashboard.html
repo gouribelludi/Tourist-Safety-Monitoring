@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Tourist Safety • Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="title">🛡️ Tourist Safety</div>
+            <div class="user"><a href="/dashboard.html" class="back-btn">← Back</a> Signed in as <span class="pill" id="name"></span></div>
+        </div>
+
+        <div class="grid two">
+            <div class="card stack">
+                <div>
+                    <div style="font-weight:700; font-size:18px; margin-bottom:6px;">Quick Actions</div>
+                    <div class="muted">Manage contacts, GPS alerts, and SOS</div>
+                </div>
+                <div class="stack">
+                    <div class="grid two">
+                        <a class="btn outline center" href="contacts.html">📇 Emergency Contacts</a>
+                        <a class="btn outline center" href="gps.html">📍 GPS Tracking</a>
+                    </div>
+                    <button class="btn danger" onclick="sendSOS()">🚨 Send SOS Alert</button>
+                </div>
+            </div>
+
+            <div class="card stack">
+                <div style="font-weight:700; font-size:18px;">How it works</div>
+                <ul class="clean">
+                    <li>Save trusted contacts (emails, optional phones stored only).</li>
+                    <li>Use GPS page to auto-send danger emails when speed is high.</li>
+                    <li>Use SOS to send an immediate alert email to contacts.</li>
+                </ul>
+                <div class="muted">Email sending requires SendGrid configuration on the backend.</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+const uname = localStorage.getItem("username");
+const uid = localStorage.getItem("userId");
+if (!uid) { location.href = 'index.html'; }
+document.getElementById("name").textContent = uname || 'User';
+
+function sendSOS() {
+    fetch("http://localhost:5000/sos", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            userId: localStorage.getItem("userId"),
+            userName: localStorage.getItem("username")
+        })
+    })
+    .then(res => res.json())
+    .then(data => alert(data.success ? "SOS Sent!" : "Failed"));
+}
+    </script>
+</body>
+</html>

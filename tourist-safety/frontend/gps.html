@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Tourist Safety • GPS</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="title">🛡️ Tourist Safety</div>
+            <div class="user"><a class="back-btn" href="/dashboard.html">← Back</a></div>
+        </div>
+
+        <div class="card stack">
+            <div style="font-weight:700; font-size:18px;">GPS Tracker</div>
+            <div class="muted">Auto-sends a danger email if speed exceeds 20 km/h.</div>
+            <div id="gpsStatus" class="banner spaced">Waiting for location...</div>
+        </div>
+    </div>
+
+    <script>
+const uid = localStorage.getItem('userId');
+if (!uid) { location.href = 'index.html'; }
+function detectDanger(pos) {
+    const speed = pos.coords.speed || 0;
+        const kph = Math.round(speed * 3.6);
+        const el = document.getElementById('gpsStatus');
+        el.textContent = `Speed: ${kph} km/h`;
+        el.className = 'banner ok spaced';
+
+    if (speed > 20) {
+        fetch("http://localhost:5000/gps-danger", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                email: localStorage.getItem("email"),
+                reason: "High Speed Detected"
+            })
+        });
+                el.textContent = `Danger alert sent (speed ${kph} km/h).`;
+                el.className = 'banner err spaced';
+    }
+}
+
+navigator.geolocation.watchPosition(detectDanger);
+    </script>
+
+</body>
+</html>
